@@ -1,54 +1,27 @@
-# Orbit
-> This theme is designed by Xiaoying Riley at [3rd Wave Media](http://themes.3rdwavemedia.com/). 
-> Visit her [website](http://themes.3rdwavemedia.com/) for more themes.
+# Minimal Mistakes remote theme starter
 
-I have made this into a Jekyll Theme. Checkout the live demo [here](http://webjeda.com/online-cv/).
+Click [**Use this template**](https://github.com/mmistakes/mm-github-pages-starter/generate) button above for the quickest method of getting started with the [Minimal Mistakes Jekyll theme](https://github.com/mmistakes/minimal-mistakes).
 
-<table>
-  <tr>
-    <th>Desktop</th>
-    <th>Mobile</th>
-  </tr>
-  <tr>
-    <td>
-        <img src="/assets/images/desktop.png?raw=true" width="600"/>
-    </td>
-    <td>
-        <img src="/assets/images/mobile.png?raw=true" width="250"/>
-    </td>
-  </tr>
-</table>
+Contains basic configuration to get you a site with:
 
-## Installation
+- Sample posts.
+- Sample top navigation.
+- Sample author sidebar with social links.
+- Sample footer links.
+- Paginated home page.
+- Archive pages for posts grouped by year, category, and tag.
+- Sample about page.
+- Sample 404 page.
+- Site wide search.
 
-* [Fork](https://github.com/sharu725/online-cv/fork) the repository
-* Go to settings and set Github Pages source as master.
-* Your new site should be ready at `https://username.github.io/online-cv/`
+Replace sample content with your own and [configure as necessary](https://mmistakes.github.io/minimal-mistakes/docs/configuration/).
 
-Change all the details from one place: ``_data/data.yml``
+---
 
-Watch my [video](https://www.youtube.com/embed/T2nx6tj-ZH4) on installation.
+## Troubleshooting
 
-## Skins
+If you have a question about using Jekyll, start a discussion on the [Jekyll Forum](https://talk.jekyllrb.com/) or [StackOverflow](https://stackoverflow.com/questions/tagged/jekyll). Other resources:
 
-There are 6 color schemes available:
-
-| Blue | Turquoise | Green |
-|---------|---------|---------|
-| <img src="/assets/images/blue.jpg" width="300"/> | <img src="/assets/images/turquoise.jpg" width="300"/> | <img src="/assets/images/green.jpg" width="300"/> |
-
-| Berry | Orange | Ceramic |
-|---------|---------|---------|
-| <img src="/assets/images/berry.jpg" width="300"/> | <img src="/assets/images/orange.jpg" width="300"/> | <img src="/assets/images/ceramic.jpg" width="300"/> |
-
-## Credits
-
-Thanks to [Nelson Estevão](https://github.com/nelsonmestevao) for all the [contributions](https://github.com/sharu725/online-cv/commits?author=nelsonmestevao).
-
-Thanks to [t-h-e(sfrost)](https://github.com/t-h-e) for all the [contributions](https://github.com/sharu725/online-cv/commits?author=t-h-e).
-
-Check out for more themes: [**Jekyll Themes**](http://jekyll-themes.com).
-
-## License
-
-This project is licensed under the [MIT license](LICENSE.txt).
+- [Ruby 101](https://jekyllrb.com/docs/ruby-101/)
+- [Setting up a Jekyll site with GitHub Pages](https://jekyllrb.com/docs/github-pages/)
+- [Configuring GitHub Metadata](https://github.com/jekyll/github-metadata/blob/master/docs/configuration.md#configuration) to work properly when developing locally and avoid `No GitHub API authentication could be found. Some fields may be missing or have incorrect data.` warnings.
