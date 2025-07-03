@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интерактивный Гид по Инвестициям в Финляндии</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Nordic Calm -->
+    <!-- Application Structure Plan: The SPA is designed as an interactive comparison tool, moving away from the linear report format. The core is a user-driven dashboard where users select investment products (SV, KS, OST, AOT) via checkboxes to generate a dynamic, side-by-side comparison grid. This is supplemented by interactive scenario cards ('What kind of investor are you?') that highlight recommended products in the grid, and a filterable table for provider-specific details. This structure was chosen to empower the user to actively explore and compare based on their personal criteria (e.g., 'I only care about stocks' or 'Inheritance is my priority'), making the complex information digestible and decision-oriented rather than a passive reading experience. -->
+    <!-- Visualization & Content Choices: 
+        1. Main Comparison: Report Info (Table 3) -> Goal: Compare -> Viz: Dynamic HTML Grid -> Interaction: Checkboxes to show/hide columns -> Justification: Allows direct, user-controlled comparison of product features.
+        2. Cost Comparison: Report Info (Table 1 - Fees) -> Goal: Compare Costs -> Viz: Bar Chart (Chart.js/Canvas) -> Interaction: Visual representation of annual fees -> Justification: More intuitive and impactful than a simple list of percentages.
+        3. Investor Scenarios: Report Info (Section 7) -> Goal: Guide -> Viz: Interactive HTML Cards -> Interaction: Clicking a card highlights recommended products and shows a detailed explanation -> Justification: Translates abstract report scenarios into an actionable, engaging guide.
+        4. Provider Details: Report Info (Tables 1 & 2) -> Goal: Organize -> Viz: Filterable HTML Table -> Interaction: Dropdown to select and view a specific provider's data -> Justification: Simplifies finding provider-specific information without overwhelming the user with large static tables.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F9FA;
+            color: #212529;
+        }
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .highlight {
+            transition: all 0.3s ease-in-out;
+            outline: 2px solid #007BFF;
+            box-shadow: 0 0 15px rgba(0, 123, 255, 0.3);
+            transform: translateY(-4px);
+        }
+        .table-header {
+            background-color: #E9ECEF;
+        }
+        .nav-button {
+            transition: all 0.2s ease-in-out;
+        }
+        .nav-button.active {
+            background-color: #007BFF;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .scenario-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .scenario-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white py-6 card-shadow">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Интерактивный Гид по Инвестиционным Инструментам Финляндии</h1>
+            <p class="mt-2 text-lg text-gray-600">Сравнивайте, анализируйте и выбирайте лучшую стратегию для вашего капитала.</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 md:py-12">
+
+        <section id="controls" class="bg-white p-6 rounded-lg card-shadow mb-12">
+            <h2 class="text-2xl font-bold mb-4 text-center">1. Выберите инструменты для сравнения</h2>
+            <div class="flex flex-wrap justify-center gap-4">
+                <label for="sv-toggle" class="flex items-center space-x-2 p-3 bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200 transition">
+                    <input type="checkbox" id="sv-toggle" class="h-5 w-5 rounded text-blue-600 focus:ring-blue-500" data-col="sv" checked>
+                    <span class="font-medium">Sijoitusvakuutus (SV)</span>
+                </label>
+                <label for="ks-toggle" class="flex items-center space-x-2 p-3 bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200 transition">
+                    <input type="checkbox" id="ks-toggle" class="h-5 w-5 rounded text-blue-600 focus:ring-blue-500" data-col="ks" checked>
+                    <span class="font-medium">Kapitalisaatiosopimus (KS)</span>
+                </label>
+                <label for="ost-toggle" class="flex items-center space-x-2 p-3 bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200 transition">
+                    <input type="checkbox" id="ost-toggle" class="h-5 w-5 rounded text-blue-600 focus:ring-blue-500" data-col="ost" checked>
+                    <span class="font-medium">Osakesäästötili (OST)</span>
+                </label>
+                <label for="aot-toggle" class="flex items-center space-x-2 p-3 bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200 transition">
+                    <input type="checkbox" id="aot-toggle" class="h-5 w-5 rounded text-blue-600 focus:ring-blue-500" data-col="aot" checked>
+                    <span class="font-medium">Arvo-osuustili (AOT)</span>
+                </label>
+            </div>
+        </section>
+
+        <section id="comparison-table-section" class="mb-12">
+            <h2 class="text-2xl font-bold mb-6 text-center">Сводная сравнительная таблица</h2>
+             <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">В этой таблице представлено прямое сравнение ключевых характеристик основных инвестиционных инструментов. Используйте галочки выше, чтобы скрыть или показать столбцы и сфокусироваться на интересующих вас вариантах.</p>
+            <div class="overflow-x-auto bg-white rounded-lg card-shadow">
+                <table class="w-full text-left border-collapse" id="comparison-table">
+                    <thead>
+                        <tr class="table-header">
+                            <th class="p-4 font-semibold text-sm md:text-base">Характеристика</th>
+                            <th class="p-4 font-semibold text-sm md:text-base text-center col-sv">Sijoitusvakuutus</th>
+                            <th class="p-4 font-semibold text-sm md:text-base text-center col-ks">Kapitalisaatiosopimus</th>
+                            <th class="p-4 font-semibold text-sm md:text-base text-center col-ost">Osakesäästötili</th>
+                            <th class="p-4 font-semibold text-sm md:text-base text-center col-aot">Arvo-osuustili</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="scenarios" class="mb-12">
+            <h2 class="text-2xl font-bold mb-6 text-center">2. Какой инструмент подходит вам?</h2>
+            <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">Выберите профиль инвестора, который лучше всего вас описывает, чтобы увидеть рекомендуемые инструменты и стратегию. Нажатие на карточку подсветит соответствующие столбцы в таблице выше и покажет детальное объяснение.</p>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="scenario-card bg-white p-6 rounded-lg card-shadow cursor-pointer" data-scenario="diversified">
+                    <h3 class="font-bold text-lg mb-2">📈 Долгосрочный диверсификатор</h3>
+                    <p class="text-gray-600 text-sm">Инвестирую на 10+ лет в портфель из фондов и ETF, планирую периодическую ребалансировку.</p>
+                </div>
+                <div class="scenario-card bg-white p-6 rounded-lg card-shadow cursor-pointer" data-scenario="stock-hunter">
+                    <h3 class="font-bold text-lg mb-2">🎯 Активный трейдер акциями</h3>
+                    <p class="text-gray-600 text-sm">Самостоятельно выбираю и активно торгую отдельными акциями.</p>
+                </div>
+                <div class="scenario-card bg-white p-6 rounded-lg card-shadow cursor-pointer" data-scenario="inheritance">
+                    <h3 class="font-bold text-lg mb-2">👨‍👩‍👧‍👦 Планировщик наследства</h3>
+                    <p class="text-gray-600 text-sm">Моя главная цель — быстрая и простая передача активов наследникам.</p>
+                </div>
+                 <div class="scenario-card bg-white p-6 rounded-lg card-shadow cursor-pointer" data-scenario="hnwi">
+                    <h3 class="font-bold text-lg mb-2">💼 Инвестор с крупным капиталом</h3>
+                    <p class="text-gray-600 text-sm">Мне нужна максимальная гибкость, диверсификация и налоговая оптимизация.</p>
+                </div>
+            </div>
+            <div id="scenario-explanation" class="mt-8 bg-blue-50 p-6 rounded-lg border-l-4 border-blue-500 hidden">
+            </div>
+        </section>
+        
+        <section id="costs" class="mb-12">
+            <h2 class="text-2xl font-bold mb-6 text-center">Сравнение расходов: Годовая плата за управление</h2>
+            <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">Расходы — ключевой фактор, влияющий на доходность. Эта диаграмма сравнивает ежегодные комиссии за управление "оболочкой" у ключевых провайдеров. Обратите внимание, что это лишь одна из составляющих общих затрат.</p>
+            <div class="bg-white p-6 rounded-lg card-shadow">
+                <div class="chart-container">
+                    <canvas id="costsChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="bg-gray-800 text-white py-6 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p>&copy; 2025 Интерактивный гид по инвестициям. Все права защищены.</p>
+            <p class="text-sm text-gray-400 mt-2">Информация основана на отчете "Комплексный Анализ Sijoitusvakuutus и Альтернативных Инвестиционных Инструментов в Финляндии". Не является финансовой рекомендацией.</p>
+        </div>
+    </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const comparisonData = [
+        {
+            feature: '<strong>Основная цель</strong>',
+            sv: 'Долгосрочные накопления, активное управление, планирование наследства',
+            ks: 'Долгосрочные накопления, инвестиции юр. лиц',
+            ost: 'Накопления и активная торговля акциями',
+            aot: 'Универсальное хранение и торговля ценными бумагами'
+        },
+        {
+            feature: '<strong>Налоговая отсрочка</strong>',
+            sv: '<span class="text-green-600 font-bold">Да</span>',
+            ks: '<span class="text-green-600 font-bold">Да</span>',
+            ost: '<span class="text-green-600 font-bold">Да</span>',
+            aot: '<span class="text-red-600 font-bold">Нет</span>'
+        },
+        {
+            feature: '<strong>Выбор инвестиций</strong>',
+            sv: 'Широкий (фонды, ETF, акции - зависит от провайдера)',
+            ks: 'Широкий (фонды, ETF, акции - зависит от провайдера)',
+            ost: 'Только акции',
+            aot: 'Неограниченный (акции, ETF, фонды, облигации и др.)'
+        },
+        {
+            feature: '<strong>Структура расходов</strong>',
+            sv: 'Высокая (плата за оболочку + расходы фондов + торг. комиссии)',
+            ks: 'Высокая (плата за оболочку + расходы фондов + торг. комиссии)',
+            ost: 'Низкая (в основном торг. комиссии)',
+            aot: 'Низкая (в основном торг. комиссии)'
+        },
+        {
+            feature: '<strong>Планирование наследства</strong>',
+            sv: 'Да (через бенефициара, обходит завещание)',
+            ks: 'Нет (переходит в наследственную массу)',
+            ost: 'Нет (переходит в наследственную массу)',
+            aot: 'Нет (переходит в наследственную массу)'
+        },
+        {
+            feature: '<strong>Вычет убытков</strong>',
+            sv: 'Только при полном закрытии договора',
+            ks: 'Только при полном закрытии договора',
+            ost: 'Только при полном закрытии счета',
+            aot: 'Гибкий (ежегодно + перенос на 5 лет)'
+        },
+        {
+            feature: '<strong>Лимиты пополнения</strong>',
+            sv: 'Нет',
+            ks: 'Нет',
+            ost: '€100,000',
+            aot: 'Нет'
+        },
+        {
+            feature: '<strong>Право собственности</strong>',
+            sv: 'Страховая компания',
+            ks: 'Страховая компания',
+            ost: 'Инвестор',
+            aot: 'Инвестор'
+        }
+    ];
+
+    const scenarioExplanations = {
+        diversified: {
+            title: 'Рекомендация для Долгосрочного Диверсификатора',
+            text: 'Для такого профиля наиболее подходящими инструментами являются <strong>Sijoitusvakuutus (SV)</strong> или <strong>Kapitalisaatiosopimus (KS)</strong>. Ключевое преимущество здесь — возможность проводить ребалансировку портфеля из фондов и ETF без немедленных налоговых последствий. Это позволяет эффекту сложного процента работать в полную силу. Выбор следует делать в пользу провайдера с низкими годовыми расходами и широким выбором недорогих активов. OST не подходит из-за ограничений на активы, а AOT проигрывает из-за налогов при каждой ребалансировке.',
+            targets: ['sv', 'ks']
+        },
+        'stock-hunter': {
+            title: 'Рекомендация для Активного Трейдера Акциями',
+            text: '<strong>Капитал до 100 000 евро:</strong> Оптимальным выбором является <strong>Osakesäästötili (OST)</strong>. Он предоставляет налоговую отсрочку, но, как правило, без ежегодной платы за управление. <br><strong>Капитал свыше 100 000 евро:</strong> Рекомендуется комбинированная стратегия. Сначала полностью пополняется <strong>OST</strong>. Для дальнейших инвестиций можно использовать <strong>Sijoitusvakuutus</strong> от провайдера, позволяющего торговать акциями (для сохранения налоговой отсрочки), или <strong>Arvo-osuustili (AOT)</strong>, если важна возможность гибкого вычета убытков.',
+            targets: ['ost', 'sv', 'aot']
+        },
+        inheritance: {
+            title: 'Рекомендация для Планировщика Наследства',
+            text: 'Единственным инструментом, который позволяет обеспечить быструю и беспроблемную передачу ликвидных активов конкретному наследнику, является <strong>Sijoitusvakuutus (SV)</strong>. Благодаря механизму назначения бенефициара, средства выплачиваются напрямую указанному лицу, минуя длительную процедуру оформления наследства. Это в первую очередь инструмент логистики и ликвидности, а не способ сэкономить на налогах.',
+            targets: ['sv']
+        },
+        hnwi: {
+            title: 'Рекомендация для Инвестора с Крупным Капиталом',
+            text: 'Оптимальной является не выбор одного инструмента, а построение комплексной стратегии: <br>1. <strong>Osakesäästötili (OST):</strong> Пополняется до лимита в €100,000 для активной торговли акциями. <br>2. <strong>Sijoitusvakuutus / Kapitalisaatiosopimus:</strong> Используется для основной части капитала для диверсифицированного портфеля из фондов, ETF и альтернативных инвестиций. <br>3. <strong>Arvo-osuustili (AOT):</strong> Используется для специфических/высокорискованных стратегий, где важен гибкий вычет убытков, или для иностранных дивидендных акций.',
+            targets: ['sv', 'ks', 'ost', 'aot']
+        }
+    };
+
+    const tableBody = document.querySelector('#comparison-table tbody');
+    const toggles = document.querySelectorAll('#controls input[type="checkbox"]');
+    const scenarioCards = document.querySelectorAll('.scenario-card');
+    const explanationDiv = document.getElementById('scenario-explanation');
+
+    function renderTable() {
+        tableBody.innerHTML = '';
+        comparisonData.forEach(row => {
+            const tr = document.createElement('tr');
+            tr.className = 'border-t border-gray-200 hover:bg-gray-50';
+            tr.innerHTML = `
+                <td class="p-4 text-sm md:text-base">${row.feature}</td>
+                <td class="p-4 text-sm md:text-base text-center col-sv">${row.sv}</td>
+                <td class="p-4 text-sm md:text-base text-center col-ks">${row.ks}</td>
+                <td class="p-4 text-sm md:text-base text-center col-ost">${row.ost}</td>
+                <td class="p-4 text-sm md:text-base text-center col-aot">${row.aot}</td>
+            `;
+            tableBody.appendChild(tr);
+        });
+        updateColumnVisibility();
+    }
+
+    function updateColumnVisibility() {
+        toggles.forEach(toggle => {
+            const colClass = `.col-${toggle.dataset.col}`;
+            const cells = document.querySelectorAll(colClass);
+            cells.forEach(cell => {
+                cell.style.display = toggle.checked ? '' : 'none';
+            });
+        });
+    }
+
+    function handleScenarioClick(e) {
+        const scenarioKey = e.currentTarget.dataset.scenario;
+        const explanation = scenarioExplanations[scenarioKey];
+
+        explanationDiv.innerHTML = `<h3 class="font-bold text-lg mb-2">${explanation.title}</h3><p class="text-gray-700">${explanation.text}</p>`;
+        explanationDiv.classList.remove('hidden');
+
+        const allCols = document.querySelectorAll('#comparison-table th, #comparison-table td');
+        allCols.forEach(col => col.classList.remove('highlight'));
+        
+        scenarioCards.forEach(card => card.classList.remove('highlight'));
+        e.currentTarget.classList.add('highlight');
+
+        explanation.targets.forEach(target => {
+            const cellsToHighlight = document.querySelectorAll(`.col-${target}`);
+            cellsToHighlight.forEach(cell => cell.classList.add('highlight'));
+        });
+        
+        explanationDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    toggles.forEach(toggle => toggle.addEventListener('change', updateColumnVisibility));
+    scenarioCards.forEach(card => card.addEventListener('click', handleScenarioClick));
+
+    const costsData = {
+        labels: ['OP', 'Nordea', 'Nordnet', 'LähiTapiola'],
+        datasets: [{
+            label: 'Годовая плата за управление "оболочкой" (%) (до ~€100k)',
+            data: [0.4, 0.4, 0.35, 0.5],
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.5)',
+                'rgba(54, 162, 235, 0.5)',
+                'rgba(255, 206, 86, 0.5)',
+                'rgba(75, 192, 192, 0.5)',
+            ],
+            borderColor: [
+                'rgba(255, 99, 132, 1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 206, 86, 1)',
+                'rgba(75, 192, 192, 1)',
+            ],
+            borderWidth: 1
+        }]
+    };
+
+    const costsChartCtx = document.getElementById('costsChart').getContext('2d');
+    new Chart(costsChartCtx, {
+        type: 'bar',
+        data: costsData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false,
+                },
+                title: {
+                    display: true,
+                    text: 'Годовая плата за управление у провайдеров (в %)'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += context.parsed.y + '%';
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    renderTable();
+});
+</script>
+</body>
+</html>
